@@ -18,10 +18,10 @@ const About: React.FC = () => {
 
                 <div>
                     <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">Contato da Paróquia</h3>
-                    <p><i className="fas fa-church mr-2 text-amber-500"></i> Paróquia Exemplo de Nossa Senhora</p>
-                    <p><i className="fas fa-map-marker-alt mr-2 text-amber-500"></i> Rua da Igreja, 123 - Centro - Cidade Exemplo</p>
-                    <p><i className="fas fa-phone mr-2 text-amber-500"></i> (XX) YYYYY-ZZZZ</p>
-                    <p><i className="fas fa-envelope mr-2 text-amber-500"></i> paroquia.exemplo@email.com</p>
+                    <p><i className="fas fa-church mr-2 text-amber-500"></i> Paróquia Santa Maria Goretti </p>
+                    <p><i className="fas fa-map-marker-alt mr-2 text-amber-500"></i> Rua Rui Barbosa S?N - Diocese de Itabuna -  Ba</p>
+                    <p><i className="fas fa-phone mr-2 text-amber-500"></i> (73) 3212-1753</p>
+                    <p><i className="fas fa-envelope mr-2 text-amber-500"></i> paroquiagoretti@hotmail.com</p>
                 </div>
 
                  <div>

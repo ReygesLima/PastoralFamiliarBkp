@@ -113,7 +113,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, loading, errorLog, o
                         </form>
                          <div className="mt-6 text-center">
                             <button onClick={() => setIsRegistering(true)} disabled={loading} className="font-medium text-blue-600 hover:text-blue-500 disabled:text-slate-400 disabled:cursor-not-allowed dark:text-blue-400 dark:hover:text-blue-300">
-                                Não Tenho Cadastrado
+                                Desejo me Cadastra
                             </button>
                         </div>
                     </div>

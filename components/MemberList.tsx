@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Member, MaritalStatus, Role, Sector } from '../types';
-import { EditIcon, DeleteIcon, AddIcon, UserIcon, DownloadIcon, FileIcon } from './icons';
+import { EditIcon, DeleteIcon, AddIcon, UserIcon, DownloadIcon, FileIcon, WhatsAppIcon } from './icons';
 import jsPDF from 'jspdf';
+import WhatsAppModal from './WhatsAppModal';
 
 interface MemberListProps {
     agents: Member[];
@@ -11,9 +12,34 @@ interface MemberListProps {
     loggedInAgent: Member;
 }
 
-const MemberCard: React.FC<{ agent: Member; onEdit: (id: number) => void; onDelete: (id: number) => void; isCoordinator: boolean; }> = ({ agent, onEdit, onDelete, isCoordinator }) => {
+interface MemberCardProps {
+    agent: Member;
+    onEdit: (id: number) => void;
+    onDelete: (id: number) => void;
+    isCoordinator: boolean;
+    isSelected: boolean;
+    onToggleSelect: (id: number) => void;
+}
+
+
+const MemberCard: React.FC<MemberCardProps> = ({ agent, onEdit, onDelete, isCoordinator, isSelected, onToggleSelect }) => {
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+        <div 
+            className={`bg-white dark:bg-slate-800 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden relative cursor-pointer ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => onToggleSelect(agent.id)}
+        >
+             <div className="absolute top-4 right-4 z-10 p-2">
+                <input
+                    type="checkbox"
+                    checked={isSelected}
+                    readOnly
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleSelect(agent.id);
+                    }}
+                    className="h-5 w-5 rounded border-slate-400 dark:border-slate-500 text-blue-600 focus:ring-blue-500 cursor-pointer bg-white dark:bg-slate-700"
+                />
+            </div>
             <div className="p-5">
                 <div className="flex items-center space-x-4 mb-4">
                      <div className="flex-shrink-0">
@@ -39,7 +65,7 @@ const MemberCard: React.FC<{ agent: Member; onEdit: (id: number) => void; onDele
                     <p><i className="fas fa-ring mr-2 text-slate-400 dark:text-slate-500"></i> {agent.maritalStatus}</p>
                 </div>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800/50 px-5 py-3 flex justify-end space-x-2">
+            <div className="bg-slate-50 dark:bg-slate-800/50 px-5 py-3 flex justify-end space-x-2" onClick={e => e.stopPropagation()}>
                 <button onClick={() => onEdit(agent.id)} className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-700 rounded-full transition-colors duration-200" aria-label={`Editar ${agent.fullName}`}>
                     <EditIcon className="h-6 w-6" />
                 </button>
@@ -60,6 +86,8 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
     const [filterMaritalStatus, setFilterMaritalStatus] = useState('');
     const [filterRole, setFilterRole] = useState('');
     const [isExportingPDF, setIsExportingPDF] = useState(false);
+    const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+    const [selectedAgentIds, setSelectedAgentIds] = useState<Set<number>>(new Set());
 
     const isCoordinator = loggedInAgent.role === Role.COORDENADOR;
 
@@ -82,6 +110,34 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
             return searchMatch && sectorMatch && maritalStatusMatch && roleMatch;
         });
     }, [agents, searchTerm, filterSector, filterMaritalStatus, filterRole]);
+
+    useEffect(() => {
+        setSelectedAgentIds(new Set());
+    }, [searchTerm, filterSector, filterMaritalStatus, filterRole]);
+
+    const handleToggleSelectAgent = (agentId: number) => {
+        setSelectedAgentIds(prevSelectedIds => {
+            const newSelectedIds = new Set(prevSelectedIds);
+            if (newSelectedIds.has(agentId)) {
+                newSelectedIds.delete(agentId);
+            } else {
+                newSelectedIds.add(agentId);
+            }
+            return newSelectedIds;
+        });
+    };
+
+    const handleToggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            const allFilteredIds = new Set(filteredAgents.map(a => a.id));
+            setSelectedAgentIds(allFilteredIds);
+        } else {
+            setSelectedAgentIds(new Set());
+        }
+    };
+    
+    const selectedAgents = useMemo(() => agents.filter(agent => selectedAgentIds.has(agent.id)), [agents, selectedAgentIds]);
+
 
     const handleExportCSV = () => {
         if (filteredAgents.length === 0) {
@@ -353,12 +409,20 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
             )}
            
             
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-4">
                 <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200">
                     {isCoordinator ? `Agentes Cadastrados (${filteredAgents.length})` : 'Meu Cadastro'}
                 </h2>
                 {isCoordinator && (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center flex-wrap gap-2">
+                        <button 
+                            onClick={() => setIsWhatsAppModalOpen(true)}
+                            disabled={selectedAgents.length === 0}
+                            className="flex items-center space-x-2 bg-teal-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-teal-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-slate-400 disabled:cursor-not-allowed"
+                        >
+                            <WhatsAppIcon className="h-5 w-5" />
+                            <span>Enviar WhatsApp ({selectedAgents.length})</span>
+                        </button>
                         <button 
                             onClick={handleExportCSV}
                             className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -384,18 +448,48 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
                     </div>
                 )}
             </div>
+            
+            {isCoordinator && filteredAgents.length > 0 && (
+                <div className="bg-white dark:bg-slate-800 p-3 rounded-lg shadow-sm flex items-center">
+                    <input
+                        id="select-all"
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 dark:border-slate-500 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        onChange={handleToggleSelectAll}
+                        checked={filteredAgents.length > 0 && selectedAgentIds.size === filteredAgents.length}
+                        disabled={filteredAgents.length === 0}
+                    />
+                    <label htmlFor="select-all" className="ml-3 block text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                        Selecionar todos na página ({selectedAgentIds.size} / {filteredAgents.length})
+                    </label>
+                </div>
+            )}
 
             {filteredAgents.length > 0 ? (
-                <div className={`grid grid-cols-1 ${isCoordinator ? 'md:grid-cols-2 lg:grid-cols-3' : ''} gap-6`}>
+                <div className={`grid grid-cols-1 ${isCoordinator ? 'md:grid-cols-2 lg:grid-cols-3' : ''} gap-6 mt-6`}>
                     {filteredAgents.map(agent => (
-                        <MemberCard key={agent.id} agent={agent} onEdit={onEdit} onDelete={onDelete} isCoordinator={isCoordinator} />
+                        <MemberCard 
+                            key={agent.id} 
+                            agent={agent} 
+                            onEdit={onEdit} 
+                            onDelete={onDelete} 
+                            isCoordinator={isCoordinator} 
+                            isSelected={selectedAgentIds.has(agent.id)}
+                            onToggleSelect={handleToggleSelectAgent}
+                        />
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
+                <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg shadow-sm mt-6">
                     <p className="text-slate-500 dark:text-slate-400">Nenhum agente encontrado com os filtros selecionados.</p>
                 </div>
             )}
+
+            <WhatsAppModal 
+                isOpen={isWhatsAppModalOpen}
+                onClose={() => setIsWhatsAppModalOpen(false)}
+                agents={selectedAgents}
+            />
         </div>
     );
 };
