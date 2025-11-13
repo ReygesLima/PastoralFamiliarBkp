@@ -164,7 +164,7 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
         }
     
         setIsExportingPDF(true);
-        const reportLogoBase64 = await imageUrlToBase64('https://images.freeimages.com/clg/images/12/120370/pastoral-familiar-brasil_f?fmt=webp&h=350');
+        const reportLogoBase64 = await imageUrlToBase64('https://static.wixstatic.com/media/efbd1a_7566647af4c94efca85aacf26f0a4228~mv2_d_1920_1920_s_2.png/v1/fill/w_350,h_350,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/efbd1a_7566647af4c94efca85aacf26f0a4228~mv2_d_1920_1920_s_2.png');
 
         try {
             const doc = new jsPDF('p', 'mm', 'a4');
