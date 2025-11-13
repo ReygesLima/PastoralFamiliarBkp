@@ -55,7 +55,7 @@ export const INITIAL_AGENTS: Member[] = [
         fullName: 'Ana Pereira',
         birthDate: '1965-03-30',
         maritalStatus: MaritalStatus.VIUVO,
-        phone: '(31) 98888-7777',
+        phone: '(31) 9888-7777',
         email: 'ana.pereira@email.com',
         cep: '30140-061',
         street: 'Rua Pernambuco',
@@ -72,3 +72,6 @@ export const INITIAL_AGENTS: Member[] = [
         notes: 'Ajuda na organização de eventos.'
     },
 ];
+
+// Base64 do logo da Pastoral Familiar para ser usado nos PDFs
+export const LOGO_BASE_64 = 'data:image/png;base64,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';

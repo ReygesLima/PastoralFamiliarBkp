@@ -131,6 +131,31 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     };
+
+    const imageUrlToBase64 = (url: string): Promise<string | null> => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0);
+                    const dataURL = canvas.toDataURL('image/png');
+                    resolve(dataURL);
+                } else {
+                    resolve(null);
+                }
+            };
+            img.onerror = () => {
+                console.error("Error loading image for PDF from URL:", url);
+                resolve(null);
+            };
+            img.src = url;
+        });
+    };
     
     const handleExportPDF = async () => {
         if (filteredAgents.length === 0) {
@@ -139,6 +164,8 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
         }
     
         setIsExportingPDF(true);
+        const reportLogoBase64 = await imageUrlToBase64('https://images.freeimages.com/clg/images/12/120370/pastoral-familiar-brasil_f?fmt=webp&h=350');
+
         try {
             const doc = new jsPDF('p', 'mm', 'a4');
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -146,18 +173,29 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
             const FONT_SIZE_NORMAL = 10;
             const FONT_SIZE_TITLE = 16;
             const FONT_SIZE_HEADER = 12;
-            const LINE_HEIGHT = 12;
+            const LINE_HEIGHT = 6;
     
             for (let i = 0; i < filteredAgents.length; i++) {
                 const agent = filteredAgents[i];
                 if (i > 0) doc.addPage();
     
-                let y = 20;
-    
+                // --- HEADER START ---
+                if (reportLogoBase64) {
+                    doc.addImage(reportLogoBase64, 'PNG', margin, 15, 20, 20);
+                }
                 doc.setFontSize(FONT_SIZE_TITLE);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Ficha Cadastral de Agente', pageWidth / 2, y, { align: 'center' });
-                y += LINE_HEIGHT * 2;
+                doc.text('Ficha Cadastral de Agente', margin + 25, 22);
+
+                doc.setFontSize(FONT_SIZE_NORMAL);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Pastoral Familiar - Cadastro Paroquial', margin + 25, 30);
+
+                doc.setDrawColor(150);
+                doc.line(margin, 35, pageWidth - margin, 35);
+                // --- HEADER END ---
+
+                let y = 45; // New starting Y position for content
     
                 const photoX = margin;
                 const photoY = y;
@@ -200,36 +238,54 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
                 y = photoY + photoSize + 15;
     
                 const drawSection = (title: string) => {
+                    const headerHeight = 8;
+                    const textPadding = 2;
+                    if (y + headerHeight > doc.internal.pageSize.getHeight() - 20) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.setFillColor(37, 99, 235); // Blue-600
+                    doc.rect(margin, y, pageWidth - margin * 2, headerHeight, 'F');
                     doc.setFontSize(FONT_SIZE_HEADER);
                     doc.setFont('helvetica', 'bold');
-                    doc.text(title, margin, y);
-                    doc.setDrawColor(0);
-                    doc.line(margin, y + 2, pageWidth - margin, y + 2);
-                    y += LINE_HEIGHT + 2;
+                    doc.setTextColor(255, 255, 255);
+                    doc.text(title, margin + textPadding, y + headerHeight / 2, { align: 'left', baseline: 'middle' });
+                    y += headerHeight + 4;
                 };
     
                 const drawField = (label: string, value: string | undefined | null) => {
-                    if (!value || value.trim() === '') return;
+                    if (!value || String(value).trim() === '') return;
                     doc.setFontSize(FONT_SIZE_NORMAL);
+                    
+                    const labelWidth = 50;
+                    const valueX = margin + labelWidth;
+                    const valueMaxWidth = pageWidth - valueX - margin;
+                    const textLines = doc.splitTextToSize(String(value), valueMaxWidth);
+
+                    if (y + (textLines.length * (LINE_HEIGHT - 1)) > doc.internal.pageSize.getHeight() - 20) {
+                        doc.addPage();
+                        y = 20;
+                    }
+
                     doc.setFont('helvetica', 'bold');
-                    doc.text(label, margin, y);
+                    doc.setTextColor(0,0,0);
+                    doc.text(label, margin, y, { baseline: 'top' });
+                    
                     doc.setFont('helvetica', 'normal');
-                    const textLines = doc.splitTextToSize(value, pageWidth - margin * 2 - 50);
-                    doc.text(textLines, margin + 50, y);
-                    y += (textLines.length * LINE_HEIGHT);
+                    doc.text(textLines, valueX, y, { baseline: 'top' });
+                    
+                    y += (textLines.length * (LINE_HEIGHT - 1)) + 3;
                 };
     
                 drawSection('Contato');
                 drawField('Telefone / WhatsApp:', agent.phone);
                 drawField('E-mail:', agent.email);
-                y += LINE_HEIGHT / 2;
     
                 drawSection('Endereço');
                 drawField('CEP:', agent.cep);
                 drawField('Endereço:', agent.street);
                 drawField('Bairro:', agent.neighborhood);
                 drawField('Cidade / UF:', `${agent.city} / ${agent.state}`);
-                y += LINE_HEIGHT / 2;
     
                 drawSection('Informações Pastorais');
                 drawField('Paróquia:', agent.parish);
@@ -237,19 +293,12 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
                 drawField('Setor Pastoral:', agent.sector);
                 drawField('Função:', agent.role);
                 if (agent.joinDate) drawField('Data de Ingresso:', new Date(agent.joinDate + 'T00:00:00').toLocaleDateString('pt-BR'));
-                y += LINE_HEIGHT / 2;
     
                 drawSection('Outras Informações');
                 drawField('Possui Veículo:', agent.hasVehicle ? 'Sim' : 'Não');
                 if (agent.hasVehicle) drawField('Modelo do Veículo:', agent.vehicleModel);
                 if (agent.notes) {
-                    y += LINE_HEIGHT / 2;
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('Observações:', margin, y);
-                    y += LINE_HEIGHT;
-                    doc.setFont('helvetica', 'normal');
-                    const notesLines = doc.splitTextToSize(agent.notes, pageWidth - margin * 2);
-                    doc.text(notesLines, margin, y);
+                    drawField('Observações:', agent.notes);
                 }
             }
     
