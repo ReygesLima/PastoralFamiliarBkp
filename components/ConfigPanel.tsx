@@ -1,0 +1,131 @@
+import React, { useState } from 'react';
+import { DownloadIcon } from './icons';
+
+interface ConfigPanelProps {
+    errorMessage: string | null;
+    onSave: (url: string, key: string) => void;
+    errorLog: string[];
+    onDownloadLog: () => void;
+}
+
+const ConfigPanel: React.FC<ConfigPanelProps> = ({ errorMessage, onSave, errorLog, onDownloadLog }) => {
+    const [url, setUrl] = useState(localStorage.getItem('supabaseUrl') || '');
+    const [key, setKey] = useState(localStorage.getItem('supabaseKey') || '');
+    const [showKey, setShowKey] = useState(false);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (url && key) {
+            onSave(url, key);
+        }
+    };
+
+    const isTableError = errorMessage?.includes('relation') || errorMessage?.includes('Could not find the table');
+
+    return (
+        <div className="flex flex-col justify-center items-center py-10">
+            <div className="w-full max-w-2xl bg-white dark:bg-slate-800 p-8 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 text-center">Configuração de Acesso</h2>
+                <p className="text-slate-500 dark:text-slate-400 text-center mt-2 mb-6">
+                    Não foi possível conectar ao banco de dados. Verifique as credenciais ou a estrutura do banco (tabela/funções).
+                </p>
+
+                {isTableError && (
+                    <div className="bg-amber-50 dark:bg-amber-900/50 p-4 rounded-md border border-amber-200 dark:border-amber-800 mb-6">
+                        <h4 className="font-bold text-amber-800 dark:text-amber-200">Dica: Tabela ou Função não encontrada</h4>
+                        <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                            O erro sugere que a tabela <code className="bg-amber-100 dark:bg-amber-800/60 p-1 rounded text-xs font-mono">membros_pastoral</code> ou a função <code className="bg-amber-100 dark:bg-amber-800/60 p-1 rounded text-xs font-mono">login_agente</code> não existem.
+                        </p>
+                         <div className="mt-4 pt-3 border-t border-amber-200 dark:border-amber-700">
+                             <h5 className="font-semibold text-amber-800 dark:text-amber-200">Como corrigir?</h5>
+                             <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                                Para sua conveniência, um script SQL foi gerado. Siga estes passos:
+                            </p>
+                            <ol className="list-decimal list-inside text-sm text-amber-700 dark:text-amber-300 mt-2 space-y-1">
+                                <li>Abra o arquivo <code className="bg-amber-100 dark:bg-amber-800/60 p-1 rounded text-xs font-mono">database.sql</code> na lista de arquivos.</li>
+                                <li>Copie todo o seu conteúdo.</li>
+                                <li>No seu painel do Supabase, vá para o <strong>SQL Editor</strong>.</li>
+                                <li>Cole o conteúdo e clique em <strong>RUN</strong>.</li>
+                            </ol>
+                        </div>
+                    </div>
+                )}
+
+                {errorMessage && (
+                    <div className="bg-red-50 dark:bg-red-900/50 p-4 rounded-md border border-red-200 dark:border-red-800 mb-6">
+                        <p className="text-red-700 dark:text-red-300 font-semibold">Detalhes do Erro:</p>
+                        <p className="text-red-600 dark:text-red-400 text-sm mt-1 font-mono">{errorMessage}</p>
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label htmlFor="supabaseUrl" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            Supabase URL
+                        </label>
+                        <input
+                            id="supabaseUrl"
+                            type="url"
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            placeholder="https://exemplo.supabase.co"
+                            required
+                            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="supabaseKey" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            Supabase Anon Key
+                        </label>
+                         <div className="relative">
+                            <input
+                                id="supabaseKey"
+                                type={showKey ? 'text' : 'password'}
+                                value={key}
+                                onChange={(e) => setKey(e.target.value)}
+                                placeholder="eyJhbGciOiJI..."
+                                required
+                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10 text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowKey(!showKey)}
+                                className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-500 hover:text-slate-700"
+                                aria-label={showKey ? 'Ocultar chave' : 'Mostrar chave'}
+                            >
+                                <i className={`fas ${showKey ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                            </button>
+                        </div>
+                    </div>
+                     <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Você pode encontrar essas informações no seu painel do Supabase, em <span className="font-semibold">Project Settings &gt; API</span>.
+                        Certifique-se também de que a <a href="https://supabase.com/docs/guides/auth/row-level-security" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Row Level Security (RLS)</a> está habilitada e configurada para permitir leitura na tabela <code className="bg-slate-100 dark:bg-slate-700 p-1 rounded text-xs">membros_pastoral</code>.
+                    </p>
+                    
+                    <div className="flex items-center space-x-3">
+                        <button
+                            type="submit"
+                            disabled={!url || !key}
+                            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-slate-400 disabled:cursor-not-allowed"
+                        >
+                            Salvar e Tentar Novamente
+                        </button>
+                         {errorLog.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={onDownloadLog}
+                                className="flex items-center space-x-2 px-4 py-3 bg-slate-600 text-white rounded-md font-semibold hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
+                                title="Baixar log de erros da sessão"
+                            >
+                                <DownloadIcon className="h-5 w-5" />
+                                <span>Baixar Log de Erros</span>
+                            </button>
+                        )}
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default ConfigPanel;
