@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import { Member, MaritalStatus, Sector, Role } from '../types';
@@ -37,9 +38,9 @@ const emptyAgent: Omit<Member, 'id'> = {
 };
 
 const FormSection: React.FC<{ title: string, children: React.ReactNode }> = ({ title, children }) => (
-    <div className="mt-8">
-        <h3 className="bg-blue-600 dark:bg-blue-700 text-white font-bold italic text-base py-2 px-4 rounded-md mb-4">{title}</h3>
-        <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+    <div className="mt-8 first:mt-2">
+        <h3 className="bg-blue-600/80 dark:bg-blue-700/80 backdrop-blur-md text-white font-bold italic text-base py-2.5 px-6 rounded-xl mb-6 shadow-md inline-block">{title}</h3>
+        <div className="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-6 p-2">
             {children}
         </div>
     </div>
@@ -62,18 +63,18 @@ interface InputFieldProps {
 
 const InputField: React.FC<InputFieldProps> = ({ name, label, value, onChange, onBlur, type = 'text', required = false, colSpan = 'sm:col-span-3', children, tooltip, disabled, maxLength }) => (
     <div className={colSpan}>
-        <div className="flex items-center">
-            <label htmlFor={name} className="block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>
+        <div className="flex items-center ml-1">
+            <label htmlFor={name} className="block text-sm font-semibold text-slate-700 dark:text-slate-200">{label}</label>
             {tooltip && (
                 <div className="relative flex items-center group ml-1.5">
-                    <InfoIcon className="h-4 w-4 text-slate-400 cursor-help" />
-                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max max-w-xs p-2 text-xs text-white bg-slate-700 dark:bg-slate-900 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+                    <InfoIcon className="h-4 w-4 text-slate-400 dark:text-slate-500 cursor-help" />
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max max-w-xs p-3 text-xs text-white bg-slate-800/90 dark:bg-black/90 backdrop-blur-md rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
                         {tooltip}
                     </div>
                 </div>
             )}
         </div>
-        <div className="mt-1">
+        <div className="mt-1.5">
             {children ? children : (
                 <input
                     type={type}
@@ -85,7 +86,7 @@ const InputField: React.FC<InputFieldProps> = ({ name, label, value, onChange, o
                     required={required}
                     disabled={disabled}
                     maxLength={maxLength}
-                    className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2.5 disabled:bg-slate-50 dark:disabled:bg-slate-700/50 disabled:text-slate-500 disabled:cursor-not-allowed"
+                    className="block w-full rounded-xl border-white/50 dark:border-slate-600/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 shadow-inner focus:border-blue-500 focus:ring-blue-500/50 text-base py-2.5 px-4 backdrop-blur-sm transition-all disabled:bg-slate-100/50 dark:disabled:bg-slate-700/40 disabled:text-slate-500 disabled:cursor-not-allowed"
                 />
             )}
         </div>
@@ -100,10 +101,6 @@ const MemberForm: React.FC<MemberFormProps> = ({
     isSelfEditing = false,
     isFirstTimeRegister = false,
 }) => {
-    // Definitive Fix: Initialize state directly from props.
-    // The `key` prop in App.tsx ensures this component is fully
-    // re-created when a different agent is selected, so this
-    // initialization logic runs with the correct `agentToEdit`.
     const [agent, setAgent] = useState<Partial<Member>>(
         agentToEdit ? { ...agentToEdit } : { ...emptyAgent }
     );
@@ -411,14 +408,14 @@ const MemberForm: React.FC<MemberFormProps> = ({
     const savingButtonText = isFirstTimeRegister ? "Cadastrando..." : "Salvando...";
 
     return (
-        <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 md:p-8 rounded-lg shadow-md max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 text-center mb-6">{formTitle}</h2>
+        <div className="bg-white/40 dark:bg-slate-900/60 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 p-6 sm:p-8 md:p-10 rounded-3xl shadow-2xl max-w-4xl mx-auto transition-all">
+            <h2 className="text-3xl font-bold text-slate-800 dark:text-white text-center mb-8 drop-shadow-sm">{formTitle}</h2>
             <form onSubmit={handleSubmit}>
                 <div className="space-y-6">
 
                     <FormSection title="Dados Pessoais">
                         <div className="sm:col-span-4 space-y-6">
-                           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                           <div className="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-2">
                                 <InputField name="fullName" label="Nome Completo" value={agent.fullName} onChange={handleChange} required colSpan="sm:col-span-2" />
                                 <InputField 
                                     name="login" 
@@ -445,7 +442,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
                                     tooltip="Sua data de nascimento será usada como parte da sua senha para acessar o sistema."
                                 />
                                 <InputField name="maritalStatus" label="Estado Civil" required colSpan="sm:col-span-2">
-                                    <select id="maritalStatus" name="maritalStatus" value={agent.maritalStatus} onChange={handleChange} className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2.5">
+                                    <select id="maritalStatus" name="maritalStatus" value={agent.maritalStatus} onChange={handleChange} className="block w-full rounded-xl border-white/50 dark:border-slate-600/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 shadow-inner focus:border-blue-500 focus:ring-blue-500/50 text-base py-2.5 px-4 backdrop-blur-sm transition-all">
                                         {Object.values(MaritalStatus).map(status => <option key={status} value={status}>{status}</option>)}
                                     </select>
                                 </InputField>
@@ -459,16 +456,16 @@ const MemberForm: React.FC<MemberFormProps> = ({
                         </div>
 
                         <div className="sm:col-span-2 flex flex-col items-center justify-start sm:pt-5">
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Foto</label>
-                            <div className="w-32 h-32 mt-1 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Foto</label>
+                            <div className="w-32 h-32 mt-1 rounded-full bg-white/50 dark:bg-slate-700/50 border-2 border-white/50 dark:border-slate-600/50 flex items-center justify-center overflow-hidden shadow-inner backdrop-blur-sm">
                                 {photoPreview ? (
                                     <img src={photoPreview} alt="Foto do Agente" className="w-full h-full object-cover" />
                                 ) : (
-                                    <UserIcon className="w-16 h-16 text-slate-400" />
+                                    <UserIcon className="w-16 h-16 text-slate-400 dark:text-slate-500" />
                                 )}
                             </div>
                             <input type="file" id="photo-upload" className="hidden" accept="image/*" onChange={handlePhotoChange} />
-                            <label htmlFor="photo-upload" className="mt-4 cursor-pointer rounded-md bg-white dark:bg-slate-600 dark:hover:bg-slate-500 py-1.5 px-2.5 text-sm font-semibold text-slate-900 dark:text-slate-100 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-500 hover:bg-slate-50">
+                            <label htmlFor="photo-upload" className="mt-4 cursor-pointer rounded-lg bg-white/80 dark:bg-slate-700/80 py-2 px-4 text-sm font-semibold text-slate-900 dark:text-slate-100 shadow-md ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-white dark:hover:bg-slate-600 backdrop-blur-sm transition-all">
                                 {photoPreview ? 'Alterar Foto' : 'Enviar Foto'}
                             </label>
                         </div>
@@ -487,8 +484,8 @@ const MemberForm: React.FC<MemberFormProps> = ({
                                 maxLength={9}
                                 colSpan="sm:col-span-6"
                             />
-                            {isFetchingCep && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Buscando endereço...</p>}
-                            {cepError && <p className="text-xs text-red-600 mt-1">{cepError}</p>}
+                            {isFetchingCep && <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 ml-1 animate-pulse">Buscando endereço...</p>}
+                            {cepError && <p className="text-xs text-red-600 dark:text-red-400 mt-1 ml-1">{cepError}</p>}
                         </div>
                         <InputField name="street" label="Endereço (Rua, Av.)" value={agent.street} onChange={handleChange} disabled={isFetchingCep} colSpan="sm:col-span-4" />
                         <InputField name="neighborhood" label="Bairro" value={agent.neighborhood} onChange={handleChange} disabled={isFetchingCep} colSpan="sm:col-span-2" />
@@ -500,13 +497,20 @@ const MemberForm: React.FC<MemberFormProps> = ({
                         <InputField name="parish" label="Paróquia" value={agent.parish} onChange={handleChange} colSpan="sm:col-span-3" />
                         <InputField name="community" label="Comunidade" value={agent.community} onChange={handleChange} colSpan="sm:col-span-3" />
                         <InputField name="sector" label="Setor Pastoral" required colSpan="sm:col-span-3">
-                            <select id="sector" name="sector" value={agent.sector} onChange={handleChange} className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2.5">
+                            <select id="sector" name="sector" value={agent.sector} onChange={handleChange} className="block w-full rounded-xl border-white/50 dark:border-slate-600/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 shadow-inner focus:border-blue-500 focus:ring-blue-500/50 text-base py-2.5 px-4 backdrop-blur-sm transition-all">
                                 {Object.values(Sector).map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </InputField>
-                        {!isSelfEditing && !isFirstTimeRegister && (
+                        {!isFirstTimeRegister && (
                             <InputField name="role" label="Função" required colSpan="sm:col-span-3">
-                                <select id="role" name="role" value={agent.role} onChange={handleChange} className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2.5">
+                                <select 
+                                    id="role" 
+                                    name="role" 
+                                    value={agent.role} 
+                                    onChange={handleChange} 
+                                    disabled={isSelfEditing}
+                                    className={`block w-full rounded-xl border-white/50 dark:border-slate-600/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 shadow-inner focus:border-blue-500 focus:ring-blue-500/50 text-base py-2.5 px-4 backdrop-blur-sm transition-all ${isSelfEditing ? 'opacity-60 cursor-not-allowed bg-slate-200/50 dark:bg-slate-900/50' : ''}`}
+                                >
                                     {Object.values(Role).map(r => <option key={r} value={r}>{r}</option>)}
                                 </select>
                             </InputField>
@@ -518,10 +522,10 @@ const MemberForm: React.FC<MemberFormProps> = ({
                         <div className="sm:col-span-6">
                             <div className="relative flex items-start">
                                 <div className="flex h-6 items-center">
-                                    <input id="hasVehicle" name="hasVehicle" type="checkbox" checked={agent.hasVehicle || false} onChange={handleChange} className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-600 bg-white dark:bg-slate-700" />
+                                    <input id="hasVehicle" name="hasVehicle" type="checkbox" checked={agent.hasVehicle || false} onChange={handleChange} className="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-600 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm" />
                                 </div>
                                 <div className="ml-3 text-sm leading-6">
-                                    <label htmlFor="hasVehicle" className="font-medium text-slate-900 dark:text-slate-200">Possui veículo disponível para a Pastoral</label>
+                                    <label htmlFor="hasVehicle" className="font-semibold text-slate-800 dark:text-slate-100">Possui veículo disponível para a Pastoral</label>
                                 </div>
                             </div>
                         </div>
@@ -529,35 +533,35 @@ const MemberForm: React.FC<MemberFormProps> = ({
                             <InputField name="vehicleModel" label="Modelo do Veículo" value={agent.vehicleModel} onChange={handleChange} colSpan="sm:col-span-3" />
                         )}
                         <div className="sm:col-span-6">
-                            <label htmlFor="notes" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observações</label>
+                            <label htmlFor="notes" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 ml-1 mb-1">Observações</label>
                             <div className="mt-1">
                                 <textarea
                                     id="notes" name="notes" rows={3} value={agent.notes || ''} onChange={handleChange}
-                                    className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2.5"
+                                    className="block w-full rounded-xl border-white/50 dark:border-slate-600/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 shadow-inner focus:border-blue-500 focus:ring-blue-500/50 text-base py-2.5 px-4 backdrop-blur-sm transition-all"
                                 ></textarea>
                             </div>
                         </div>
                     </FormSection>
                 </div>
 
-                <div className="pt-5 mt-6 border-t border-slate-200 dark:border-slate-700">
-                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:items-center gap-3">
-                        <button type="submit" disabled={isSaving || !!successMessage} className="w-full sm:w-auto inline-flex justify-center rounded-md bg-blue-600 py-2 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-wait">
+                <div className="pt-8 mt-8 border-t border-white/20 dark:border-slate-700/30">
+                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:items-center gap-4">
+                        <button type="submit" disabled={isSaving || !!successMessage} className="w-full sm:w-auto inline-flex justify-center rounded-xl bg-blue-600/90 py-2.5 px-8 text-sm font-bold text-white shadow-lg hover:bg-blue-700/90 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-slate-400 disabled:cursor-wait disabled:hover:scale-100 transition-all backdrop-blur-sm">
                             {isSaving ? savingButtonText : saveButtonText}
                         </button>
                         {!isSelfEditing && !isFirstTimeRegister && onCancel && (
-                            <button type="button" onClick={onCancel} disabled={isSaving || !!successMessage} className="w-full sm:w-auto rounded-md bg-white dark:bg-slate-700 py-2 px-4 text-sm font-semibold text-slate-900 dark:text-slate-100 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:cursor-not-allowed">
+                            <button type="button" onClick={onCancel} disabled={isSaving || !!successMessage} className="w-full sm:w-auto rounded-xl bg-white/70 dark:bg-slate-700/70 py-2.5 px-6 text-sm font-semibold text-slate-900 dark:text-slate-100 shadow-md ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-white/90 dark:hover:bg-slate-600/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all backdrop-blur-sm">
                                 Cancelar
                             </button>
                         )}
                         {agentToEdit && !isFirstTimeRegister && !isSelfEditing && (
-                            <button type="button" onClick={handleGeneratePDF} disabled={isGeneratingPDF || isSaving || !!successMessage} className="w-full sm:w-auto inline-flex items-center justify-center gap-x-2 rounded-md bg-slate-600 py-2 px-4 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed">
+                            <button type="button" onClick={handleGeneratePDF} disabled={isGeneratingPDF || isSaving || !!successMessage} className="w-full sm:w-auto inline-flex items-center justify-center gap-x-2 rounded-xl bg-slate-600/90 py-2.5 px-6 text-sm font-semibold text-white shadow-lg hover:bg-slate-700/90 hover:scale-105 disabled:bg-slate-400 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all backdrop-blur-sm">
                                 <PrintIcon className="h-5 w-5" />
                                 {isGeneratingPDF ? 'Gerando PDF...' : 'Imprimir Ficha'}
                             </button>
                          )}
                          {successMessage && (
-                            <p className="text-sm font-semibold text-green-600 dark:text-green-400 sm:mr-auto animate-pulse text-center sm:text-left">
+                            <p className="text-sm font-bold text-green-600 dark:text-green-400 sm:mr-auto animate-pulse text-center sm:text-left bg-green-100/50 dark:bg-green-900/30 px-4 py-2 rounded-lg">
                                 {successMessage}
                             </p>
                         )}

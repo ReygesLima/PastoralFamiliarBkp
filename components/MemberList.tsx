@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Member, MaritalStatus, Role, Sector } from '../types';
 import { EditIcon, DeleteIcon, AddIcon, UserIcon, DownloadIcon, FileIcon, WhatsAppIcon } from './icons';
@@ -25,10 +26,10 @@ interface MemberCardProps {
 const MemberCard: React.FC<MemberCardProps> = ({ agent, onEdit, onDelete, isCoordinator, isSelected, onToggleSelect }) => {
     return (
         <div 
-            className={`bg-white dark:bg-slate-800 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden relative cursor-pointer ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+            className={`bg-white/40 dark:bg-slate-800/60 backdrop-blur-md border border-white/40 dark:border-slate-700/50 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden relative cursor-pointer group ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-transparent' : ''}`}
             onClick={() => onToggleSelect(agent.id)}
         >
-             <div className="absolute top-4 right-4 z-10 p-2">
+             <div className="absolute top-4 right-4 z-10 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <input
                     type="checkbox"
                     checked={isSelected}
@@ -37,41 +38,56 @@ const MemberCard: React.FC<MemberCardProps> = ({ agent, onEdit, onDelete, isCoor
                         e.stopPropagation();
                         onToggleSelect(agent.id);
                     }}
-                    className="h-5 w-5 rounded border-slate-400 dark:border-slate-500 text-blue-600 focus:ring-blue-500 cursor-pointer bg-white dark:bg-slate-700"
+                    className="h-5 w-5 rounded-md border-slate-400 dark:border-slate-500 text-blue-600 focus:ring-blue-500 cursor-pointer bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm"
                 />
             </div>
-            <div className="p-5">
+             {isSelected && (
+                 <div className="absolute top-4 right-4 z-10 p-2 opacity-100">
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        readOnly
+                         onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleSelect(agent.id);
+                        }}
+                        className="h-5 w-5 rounded-md border-slate-400 dark:border-slate-500 text-blue-600 focus:ring-blue-500 cursor-pointer bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm"
+                    />
+                 </div>
+             )}
+
+            <div className="p-6">
                 <div className="flex items-center space-x-4 mb-4">
-                     <div className="flex-shrink-0">
+                     <div className="flex-shrink-0 relative">
                         {agent.photo ? (
-                            <img className="h-16 w-16 rounded-full object-cover" src={agent.photo} alt={agent.fullName} />
+                            <img className="h-16 w-16 rounded-full object-cover ring-2 ring-white/50 dark:ring-slate-600 shadow-md" src={agent.photo} alt={agent.fullName} />
                         ) : (
-                            <div className="flex-shrink-0 bg-blue-100 dark:bg-slate-700 rounded-full p-3 text-blue-600 dark:text-blue-400 h-16 w-16 flex items-center justify-center">
+                            <div className="flex-shrink-0 bg-blue-100/50 dark:bg-slate-700/50 rounded-full p-3 text-blue-600 dark:text-blue-400 h-16 w-16 flex items-center justify-center ring-2 ring-white/50 dark:ring-slate-600 shadow-md">
                                 <UserIcon className="h-8 w-8" />
                             </div>
                         )}
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{agent.fullName}</h3>
-                        <p className="text-sm text-amber-600 font-semibold">{agent.role}</p>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">{agent.fullName}</h3>
+                        <p className="text-sm text-amber-600 dark:text-amber-400 font-semibold">{agent.role}</p>
                     </div>
                 </div>
                 
-                <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
-                    <p><i className="fas fa-sitemap mr-2 text-slate-400 dark:text-slate-500"></i> {agent.sector}</p>
-                    <p><i className="fas fa-church mr-2 text-slate-400 dark:text-slate-500"></i> {agent.parish} / {agent.community}</p>
-                    <p><i className="fas fa-phone mr-2 text-slate-400 dark:text-slate-500"></i> {agent.phone}</p>
-                    <p><i className="fas fa-map-marker-alt mr-2 text-slate-400 dark:text-slate-500"></i> {agent.city}, {agent.state}</p>
-                    <p><i className="fas fa-ring mr-2 text-slate-400 dark:text-slate-500"></i> {agent.maritalStatus}</p>
+                <div className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                    <p className="flex items-center"><i className="fas fa-sitemap mr-3 text-slate-400 dark:text-slate-500 w-4 text-center"></i> {agent.sector}</p>
+                    <p className="flex items-center"><i className="fas fa-church mr-3 text-slate-400 dark:text-slate-500 w-4 text-center"></i> {agent.parish} / {agent.community}</p>
+                    <p className="flex items-center"><i className="fas fa-phone mr-3 text-slate-400 dark:text-slate-500 w-4 text-center"></i> {agent.phone}</p>
+                    <p className="flex items-center"><i className="fas fa-map-marker-alt mr-3 text-slate-400 dark:text-slate-500 w-4 text-center"></i> {agent.city}, {agent.state}</p>
+                    <p className="flex items-center"><i className="fas fa-ring mr-3 text-slate-400 dark:text-slate-500 w-4 text-center"></i> {agent.maritalStatus}</p>
                 </div>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800/50 px-5 py-3 flex justify-end space-x-2" onClick={e => e.stopPropagation()}>
-                <button onClick={() => onEdit(agent.id)} className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-slate-700 rounded-full transition-colors duration-200" aria-label={`Editar ${agent.fullName}`}>
-                    <EditIcon className="h-6 w-6" />
+            <div className="bg-white/30 dark:bg-slate-800/40 px-5 py-3 flex justify-end space-x-2 border-t border-white/20 dark:border-slate-700/30" onClick={e => e.stopPropagation()}>
+                <button onClick={() => onEdit(agent.id)} className="p-2 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-full transition-colors duration-200" aria-label={`Editar ${agent.fullName}`}>
+                    <EditIcon className="h-5 w-5" />
                 </button>
                 {isCoordinator && (
-                    <button onClick={() => onDelete(agent.id)} className="p-2 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-slate-700 rounded-full transition-colors duration-200" aria-label={`Excluir ${agent.fullName}`}>
-                        <DeleteIcon className="h-6 w-6" />
+                    <button onClick={() => onDelete(agent.id)} className="p-2 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-full transition-colors duration-200" aria-label={`Excluir ${agent.fullName}`}>
+                        <DeleteIcon className="h-5 w-5" />
                     </button>
                 )}
             </div>
@@ -94,7 +110,6 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
     const sectors = useMemo(() => {
         if (!agents) return [];
         const uniqueSectors = new Set(agents.map(agent => agent.sector));
-        // FIX: Explicitly type sort parameters as string to resolve TypeScript error.
         return Array.from(uniqueSectors).sort((a: string, b: string) => a.localeCompare(b));
     }, [agents]);
     const roles = Object.values(Role);
@@ -370,36 +385,36 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
     return (
         <div className="space-y-6">
             {isCoordinator && (
-                 <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                 <div className="bg-white/40 dark:bg-slate-900/60 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 p-6 rounded-3xl shadow-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
                         <div className="col-span-1 md:col-span-2 lg:col-span-1">
-                            <label htmlFor="search" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Buscar por Nome ou Telefone</label>
+                            <label htmlFor="search" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2 ml-1">Buscar por Nome ou Telefone</label>
                             <input
                                 id="search"
                                 type="text"
                                 placeholder="Digite aqui..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200"
+                                className="w-full px-4 py-2.5 border border-white/50 dark:border-slate-600/50 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-sm bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder-slate-500 backdrop-blur-sm transition-all"
                             />
                         </div>
                         <div>
-                            <label htmlFor="filterSector" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Setor Pastoral</label>
-                            <select id="filterSector" value={filterSector} onChange={(e) => setFilterSector(e.target.value)} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-slate-200">
+                            <label htmlFor="filterSector" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2 ml-1">Setor Pastoral</label>
+                            <select id="filterSector" value={filterSector} onChange={(e) => setFilterSector(e.target.value)} className="w-full px-4 py-2.5 border border-white/50 dark:border-slate-600/50 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white/50 dark:bg-slate-800/50 text-sm text-slate-900 dark:text-slate-100 backdrop-blur-sm transition-all">
                                 <option value="">Todos</option>
                                 {sectors.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label htmlFor="filterMaritalStatus" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Estado Civil</label>
-                            <select id="filterMaritalStatus" value={filterMaritalStatus} onChange={(e) => setFilterMaritalStatus(e.target.value)} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-slate-200">
+                            <label htmlFor="filterMaritalStatus" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2 ml-1">Estado Civil</label>
+                            <select id="filterMaritalStatus" value={filterMaritalStatus} onChange={(e) => setFilterMaritalStatus(e.target.value)} className="w-full px-4 py-2.5 border border-white/50 dark:border-slate-600/50 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white/50 dark:bg-slate-800/50 text-sm text-slate-900 dark:text-slate-100 backdrop-blur-sm transition-all">
                                 <option value="">Todos</option>
                                 {Object.values(MaritalStatus).map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label htmlFor="filterRole" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Função</label>
-                            <select id="filterRole" value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-slate-200">
+                            <label htmlFor="filterRole" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2 ml-1">Função</label>
+                            <select id="filterRole" value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="w-full px-4 py-2.5 border border-white/50 dark:border-slate-600/50 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white/50 dark:bg-slate-800/50 text-sm text-slate-900 dark:text-slate-100 backdrop-blur-sm transition-all">
                                 <option value="">Todas</option>
                                 {roles.map(r => <option key={r} value={r}>{r}</option>)}
                             </select>
@@ -409,8 +424,8 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
             )}
            
             
-            <div className="flex justify-between items-center flex-wrap gap-4">
-                <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200">
+            <div className="flex justify-between items-center flex-wrap gap-4 px-1">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white drop-shadow-sm">
                     {isCoordinator ? `Agentes Cadastrados (${filteredAgents.length})` : 'Meu Cadastro'}
                 </h2>
                 {isCoordinator && (
@@ -418,49 +433,49 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
                         <button 
                             onClick={() => setIsWhatsAppModalOpen(true)}
                             disabled={selectedAgents.length === 0}
-                            className="flex items-center space-x-2 bg-teal-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-teal-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-slate-400 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 bg-teal-500/90 text-white px-5 py-2.5 rounded-xl shadow-lg hover:bg-teal-600/90 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-slate-400/50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-none backdrop-blur-sm"
                         >
                             <WhatsAppIcon className="h-5 w-5" />
-                            <span>Enviar WhatsApp ({selectedAgents.length})</span>
+                            <span>WhatsApp ({selectedAgents.length})</span>
                         </button>
                         <button 
                             onClick={handleExportCSV}
-                            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            className="flex items-center space-x-2 bg-green-600/90 text-white px-5 py-2.5 rounded-xl shadow-lg hover:bg-green-700/90 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 backdrop-blur-sm"
                         >
                             <DownloadIcon className="h-5 w-5" />
-                            <span>Exportar CSV</span>
+                            <span>CSV</span>
                         </button>
                         <button 
                             onClick={handleExportPDF}
                             disabled={isExportingPDF}
-                            className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-slate-400 disabled:cursor-not-allowed"
+                            className="flex items-center space-x-2 bg-red-600/90 text-white px-5 py-2.5 rounded-xl shadow-lg hover:bg-red-700/90 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-slate-400/50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-none backdrop-blur-sm"
                         >
                             <FileIcon className="h-5 w-5" />
-                            <span>{isExportingPDF ? 'Gerando...' : 'Exportar Fichas (PDF)'}</span>
+                            <span>{isExportingPDF ? 'Gerando...' : 'PDF'}</span>
                         </button>
                         <button 
                             onClick={onAddNew}
-                            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            className="flex items-center space-x-2 bg-blue-600/90 text-white px-5 py-2.5 rounded-xl shadow-lg hover:bg-blue-700/90 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 backdrop-blur-sm"
                         >
                             <AddIcon className="h-5 w-5" />
-                            <span>Novo Agente</span>
+                            <span>Novo</span>
                         </button>
                     </div>
                 )}
             </div>
             
             {isCoordinator && filteredAgents.length > 0 && (
-                <div className="bg-white dark:bg-slate-800 p-3 rounded-lg shadow-sm flex items-center">
+                <div className="bg-white/40 dark:bg-slate-900/60 backdrop-blur-md border border-white/40 dark:border-slate-700/50 px-4 py-3 rounded-xl shadow-sm flex items-center inline-block">
                     <input
                         id="select-all"
                         type="checkbox"
-                        className="h-4 w-4 rounded border-slate-300 dark:border-slate-500 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        className="h-4 w-4 rounded border-slate-300 dark:border-slate-500 text-blue-600 focus:ring-blue-500 cursor-pointer bg-white/50 dark:bg-slate-800/50"
                         onChange={handleToggleSelectAll}
                         checked={filteredAgents.length > 0 && selectedAgentIds.size === filteredAgents.length}
                         disabled={filteredAgents.length === 0}
                     />
-                    <label htmlFor="select-all" className="ml-3 block text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
-                        Selecionar todos na página ({selectedAgentIds.size} / {filteredAgents.length})
+                    <label htmlFor="select-all" className="ml-3 block text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer">
+                        Selecionar todos ({selectedAgentIds.size} / {filteredAgents.length})
                     </label>
                 </div>
             )}
@@ -480,8 +495,8 @@ const MemberList: React.FC<MemberListProps> = ({ agents, onEdit, onDelete, onAdd
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-lg shadow-sm mt-6">
-                    <p className="text-slate-500 dark:text-slate-400">Nenhum agente encontrado com os filtros selecionados.</p>
+                <div className="text-center py-16 bg-white/30 dark:bg-slate-800/40 backdrop-blur-md border border-white/20 dark:border-slate-700/30 rounded-3xl shadow-lg mt-6">
+                    <p className="text-slate-600 dark:text-slate-300 text-lg">Nenhum agente encontrado com os filtros selecionados.</p>
                 </div>
             )}
 

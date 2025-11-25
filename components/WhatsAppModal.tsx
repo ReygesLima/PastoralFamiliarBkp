@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Member } from '../types';
 import { WhatsAppIcon, CloseIcon } from './icons';
@@ -78,28 +79,28 @@ const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose, agents }
 
     return (
         <div 
-            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4 transition-opacity duration-300"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity duration-300"
             onClick={onClose}
         >
             <div 
-                className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg p-6 relative animate-fade-in"
+                className="bg-white/60 dark:bg-slate-800/80 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-3xl shadow-2xl w-full max-w-lg p-8 relative animate-fade-in"
                 onClick={(e) => e.stopPropagation()}
             >
-                <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
                     <CloseIcon className="h-6 w-6" />
                 </button>
 
-                <div className="flex items-center mb-4">
-                    <WhatsAppIcon className="h-8 w-8 text-green-500 mr-3" />
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Enviar Mensagem via WhatsApp</h2>
+                <div className="flex items-center mb-6">
+                    <WhatsAppIcon className="h-10 w-10 text-green-500 mr-4 drop-shadow-md" />
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white drop-shadow-sm">Enviar Mensagem</h2>
                 </div>
 
-                <p className="text-slate-600 dark:text-slate-300 mb-4">
-                    A mensagem será enviada para <strong>{agents.length} agente(s) selecionado(s)</strong>.
+                <p className="text-slate-600 dark:text-slate-300 mb-6 font-medium">
+                    A mensagem será enviada para <strong className="text-blue-600 dark:text-blue-400">{agents.length} agente(s) selecionado(s)</strong>.
                 </p>
 
-                <div className="mb-4">
-                    <label htmlFor="whatsapp-message" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <div className="mb-6">
+                    <label htmlFor="whatsapp-message" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2 ml-1">
                         Mensagem
                     </label>
                     <textarea
@@ -107,19 +108,19 @@ const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose, agents }
                         rows={6}
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-base py-2.5"
+                        className="block w-full rounded-xl border-white/50 dark:border-slate-600/50 bg-white/50 dark:bg-slate-700/50 text-slate-900 dark:text-slate-100 shadow-inner focus:border-blue-500 focus:ring-blue-500/50 text-base py-3 px-4 backdrop-blur-sm transition-all resize-none"
                     />
-                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                        Dica: Use <code className="bg-slate-200 dark:bg-slate-700 p-0.5 rounded-sm">{'{nome}'}</code> para personalizar a mensagem com o primeiro nome do agente.
+                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 px-1">
+                        Dica: Use <code className="bg-white/50 dark:bg-slate-700/50 px-1.5 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono border border-slate-200 dark:border-slate-600">{'{nome}'}</code> para personalizar a mensagem com o primeiro nome.
                     </p>
                 </div>
 
-                <div className="flex justify-end space-x-3 mt-6">
+                <div className="flex justify-end space-x-4 mt-8">
                     <button 
                         type="button" 
                         onClick={onClose} 
                         disabled={isSending}
-                        className="rounded-md bg-white dark:bg-slate-700 py-2 px-4 text-sm font-semibold text-slate-900 dark:text-slate-100 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50"
+                        className="rounded-xl bg-white/50 dark:bg-slate-700/50 py-2.5 px-6 text-sm font-semibold text-slate-900 dark:text-slate-100 shadow-sm ring-1 ring-inset ring-slate-300/50 dark:ring-slate-600/50 hover:bg-white/80 dark:hover:bg-slate-600/80 disabled:opacity-50 transition-all backdrop-blur-sm"
                     >
                         Cancelar
                     </button>
@@ -127,7 +128,7 @@ const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose, agents }
                         type="button"
                         onClick={handleSendMessages}
                         disabled={isSending || agents.length === 0}
-                        className="inline-flex justify-center rounded-md bg-green-600 py-2 px-6 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-wait"
+                        className="inline-flex justify-center rounded-xl bg-green-600/90 py-2.5 px-8 text-sm font-bold text-white shadow-lg hover:bg-green-700/90 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:bg-slate-400 disabled:cursor-wait disabled:hover:scale-100 transition-all backdrop-blur-sm"
                     >
                         {isSending ? 'Enviando...' : 'Iniciar Envio'}
                     </button>

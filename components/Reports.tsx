@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { Member, MaritalStatus, Sector } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -38,6 +39,8 @@ const Reports: React.FC<ReportsProps> = ({ agents }) => {
         contentStyle: {
             backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.8)',
             border: `1px solid ${isDarkMode ? '#475569' : '#d1d5db'}`,
+            borderRadius: '12px',
+            backdropFilter: 'blur(8px)',
         },
         itemStyle: { color: chartTextColor },
         labelStyle: { color: chartTextColor },
@@ -93,11 +96,11 @@ const Reports: React.FC<ReportsProps> = ({ agents }) => {
     return (
         <div className="space-y-8">
             <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Relatórios da Pastoral</h2>
+                <h2 className="text-3xl font-bold text-slate-800 dark:text-white drop-shadow-sm">Relatórios da Pastoral</h2>
                  <button 
                     onClick={handleExportPDF}
                     disabled={isExporting}
-                    className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-slate-400 disabled:cursor-not-allowed"
+                    className="flex items-center space-x-2 bg-green-600/90 text-white px-5 py-2.5 rounded-xl shadow-lg hover:bg-green-700/90 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-slate-400 disabled:cursor-not-allowed backdrop-blur-sm"
                 >
                     <DownloadIcon className="h-5 w-5" />
                     <span>{isExporting ? 'Exportando...' : 'Exportar para PDF'}</span>
@@ -105,25 +108,25 @@ const Reports: React.FC<ReportsProps> = ({ agents }) => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md text-center">
-                    <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300">Total de Agentes</h3>
-                    <p className="text-5xl font-bold text-blue-600 dark:text-blue-400 mt-2">{totalAgents}</p>
+                <div className="bg-white/40 dark:bg-slate-800/60 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 p-8 rounded-3xl shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
+                    <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200">Total de Agentes</h3>
+                    <p className="text-6xl font-bold text-blue-600 dark:text-blue-400 mt-4 drop-shadow-md">{totalAgents}</p>
                 </div>
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md text-center">
-                    <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300">Setores Ativos</h3>
-                    <p className="text-5xl font-bold text-green-600 dark:text-green-400 mt-2">{dataBySector.length}</p>
+                <div className="bg-white/40 dark:bg-slate-800/60 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 p-8 rounded-3xl shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
+                    <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200">Setores Ativos</h3>
+                    <p className="text-6xl font-bold text-green-600 dark:text-green-400 mt-4 drop-shadow-md">{dataBySector.length}</p>
                 </div>
-                 <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md text-center">
-                    <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300">Média de Agentes por Setor</h3>
-                    <p className="text-5xl font-bold text-amber-600 dark:text-amber-400 mt-2">
+                 <div className="bg-white/40 dark:bg-slate-800/60 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 p-8 rounded-3xl shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
+                    <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200">Média de Agentes por Setor</h3>
+                    <p className="text-6xl font-bold text-amber-600 dark:text-amber-400 mt-4 drop-shadow-md">
                         {dataBySector.length > 0 ? (totalAgents / dataBySector.length).toFixed(1) : 0}
                     </p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div id="maritalStatusChart" className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
-                    <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-4">Agentes por Estado Civil</h3>
+                <div id="maritalStatusChart" className="bg-white/40 dark:bg-slate-800/60 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 p-6 rounded-3xl shadow-lg">
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6 pl-2">Agentes por Estado Civil</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                             <Pie
@@ -147,16 +150,16 @@ const Reports: React.FC<ReportsProps> = ({ agents }) => {
                         </PieChart>
                     </ResponsiveContainer>
                 </div>
-                <div id="sectorChart" className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
-                     <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-200 mb-4">Agentes por Setor Pastoral</h3>
+                <div id="sectorChart" className="bg-white/40 dark:bg-slate-800/60 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 p-6 rounded-3xl shadow-lg">
+                     <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6 pl-2">Agentes por Setor Pastoral</h3>
                      <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={dataBySector} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#475569' : '#e5e7eb'} />
+                            <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#475569' : '#cbd5e1'} strokeOpacity={0.5} />
                             <XAxis dataKey="name" tick={{ fill: chartTextColor }} />
                             <YAxis allowDecimals={false} tick={{ fill: chartTextColor }} />
-                            <Tooltip {...tooltipStyles} cursor={{ fill: isDarkMode ? 'rgba(71, 85, 105, 0.5)' : 'rgba(203, 213, 225, 0.5)' }}/>
+                            <Tooltip {...tooltipStyles} cursor={{ fill: isDarkMode ? 'rgba(71, 85, 105, 0.3)' : 'rgba(255, 255, 255, 0.3)' }}/>
                             <Legend wrapperStyle={{ color: chartTextColor }} />
-                            <Bar dataKey="value" fill="#82ca9d" name="Agentes" />
+                            <Bar dataKey="value" fill="#82ca9d" name="Agentes" radius={[6, 6, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>

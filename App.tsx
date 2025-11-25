@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import MemberList from './components/MemberList';
@@ -218,7 +219,6 @@ function AppContent() {
                 }
                 throw supabaseError;
             }
-            // Não chama o handleLogin diretamente, mas sim o que está por trás dele
             await handleLogin(agentData.login, agentData.birthDate);
             return true;
         } catch (err) {
@@ -241,6 +241,11 @@ function AppContent() {
         setLoading(true);
         
         const { id, ...restOfData } = agentData;
+
+        if (loggedInAgent.role === Role.AGENTE) {
+            restOfData.role = Role.AGENTE;
+        }
+
         const dataForDb = {
             ...restOfData,
             weddingDate: restOfData.weddingDate || null,
@@ -334,10 +339,10 @@ function AppContent() {
     const renderContent = () => {
         if (loading && !loggedInAgent && !showConfigPanel) {
             return (
-                <div className="flex flex-col justify-center items-center h-screen bg-slate-100 dark:bg-slate-900">
-                    <LogoIcon className="h-24 w-24 mb-4 animate-pulse" />
-                    <h2 className="text-xl font-semibold text-slate-600 dark:text-slate-300">Aguarde...</h2>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2">Estamos preparando tudo para você.</p>
+                <div className="flex flex-col justify-center items-center h-full">
+                    <LogoIcon className="h-24 w-24 mb-4 animate-pulse drop-shadow-md" />
+                    <h2 className="text-xl font-semibold text-white drop-shadow-md">Aguarde...</h2>
+                    <p className="text-blue-100 mt-2 font-medium drop-shadow-sm">Estamos preparando tudo para você.</p>
                 </div>
             );
         }
@@ -376,15 +381,41 @@ function AppContent() {
     };
 
     return (
-        <div className="bg-slate-100 dark:bg-slate-900 min-h-screen font-sans">
-            {loggedInAgent && <Header setCurrentView={setCurrentView} loggedInAgent={loggedInAgent} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} />}
-            <main className={loggedInAgent ? "container mx-auto p-4 sm:p-6 md:p-8" : ""}>
-                {renderContent()}
-            </main>
+        <div className="min-h-screen font-sans selection:bg-blue-300 selection:text-blue-900 bg-gradient-to-br from-[#7397da] via-[#6589c9] to-[#567ab8] dark:from-[#2d3748] dark:via-[#1a202c] dark:to-[#2d3748] relative overflow-x-hidden transition-colors duration-500">
+            {/* Animated Blobs Background */}
+            <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[-10%] left-[-5%] w-[50vh] h-[50vh] rounded-full bg-white/20 dark:bg-blue-500/10 blur-[80px] animate-blob"></div>
+                <div className="absolute top-[20%] right-[-10%] w-[50vh] h-[50vh] rounded-full bg-purple-300/30 dark:bg-purple-500/10 blur-[80px] animate-blob animation-delay-2000"></div>
+                <div className="absolute bottom-[-10%] left-[20%] w-[50vh] h-[50vh] rounded-full bg-cyan-300/30 dark:bg-teal-500/10 blur-[80px] animate-blob animation-delay-4000"></div>
+            </div>
+
+            <div className="relative z-10 min-h-screen flex flex-col">
+                {loggedInAgent && <Header setCurrentView={setCurrentView} loggedInAgent={loggedInAgent} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} />}
+                <main className={loggedInAgent ? "container mx-auto p-4 sm:p-6 md:p-8 flex-grow" : "flex-grow flex flex-col justify-center"}>
+                    {renderContent()}
+                </main>
+            </div>
+
+            <style>{`
+                @keyframes blob {
+                    0% { transform: translate(0px, 0px) scale(1); }
+                    33% { transform: translate(30px, -50px) scale(1.1); }
+                    66% { transform: translate(-20px, 20px) scale(0.9); }
+                    100% { transform: translate(0px, 0px) scale(1); }
+                }
+                .animate-blob {
+                    animation: blob 7s infinite;
+                }
+                .animation-delay-2000 {
+                    animation-delay: 2s;
+                }
+                .animation-delay-4000 {
+                    animation-delay: 4s;
+                }
+            `}</style>
         </div>
     );
 }
-
 
 function App() {
     return (
