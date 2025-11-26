@@ -59,9 +59,10 @@ interface InputFieldProps {
     tooltip?: string;
     disabled?: boolean;
     maxLength?: number;
+    placeholder?: string;
 }
 
-const InputField: React.FC<InputFieldProps> = ({ name, label, value, onChange, onBlur, type = 'text', required = false, colSpan = 'sm:col-span-3', children, tooltip, disabled, maxLength }) => (
+const InputField: React.FC<InputFieldProps> = ({ name, label, value, onChange, onBlur, type = 'text', required = false, colSpan = 'sm:col-span-3', children, tooltip, disabled, maxLength, placeholder }) => (
     <div className={colSpan}>
         <div className="flex items-center ml-1">
             <label htmlFor={name} className="block text-sm font-semibold text-slate-700 dark:text-slate-200">{label}</label>
@@ -86,7 +87,8 @@ const InputField: React.FC<InputFieldProps> = ({ name, label, value, onChange, o
                     required={required}
                     disabled={disabled}
                     maxLength={maxLength}
-                    className="block w-full rounded-xl border-white/50 dark:border-slate-600/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 shadow-inner focus:border-blue-500 focus:ring-blue-500/50 text-base py-2.5 px-4 backdrop-blur-sm transition-all disabled:bg-slate-100/50 dark:disabled:bg-slate-700/40 disabled:text-slate-500 disabled:cursor-not-allowed"
+                    placeholder={placeholder}
+                    className="block w-full rounded-xl border-white/50 dark:border-slate-600/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 shadow-inner focus:border-blue-500 focus:ring-blue-500/50 text-base py-2.5 px-4 backdrop-blur-sm transition-all disabled:bg-slate-100/50 dark:disabled:bg-slate-700/40 disabled:text-slate-500 disabled:cursor-not-allowed placeholder-slate-400 dark:placeholder-slate-500"
                 />
             )}
         </div>
@@ -101,9 +103,39 @@ const MemberForm: React.FC<MemberFormProps> = ({
     isSelfEditing = false,
     isFirstTimeRegister = false,
 }) => {
-    const [agent, setAgent] = useState<Partial<Member>>(
-        agentToEdit ? { ...agentToEdit } : { ...emptyAgent }
-    );
+    
+    // Funções auxiliares de data
+    const isoToDisplay = (isoDate: string | undefined) => {
+        if (!isoDate) return '';
+        const [year, month, day] = isoDate.split('-');
+        if (!year || !month || !day) return isoDate;
+        return `${day}/${month}/${year}`;
+    };
+
+    const displayToIso = (displayDate: string | undefined) => {
+        if (!displayDate || displayDate.length !== 10) return '';
+        const [day, month, year] = displayDate.split('/');
+        return `${year}-${month}-${day}`;
+    };
+
+    const formatDateMask = (value: string) => {
+        const numbers = value.replace(/\D/g, '');
+        if (numbers.length <= 2) return numbers;
+        if (numbers.length <= 4) return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+        return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+    };
+
+    // Inicializa o estado convertendo datas ISO para DD/MM/AAAA para exibição
+    const [agent, setAgent] = useState<Partial<Member>>(() => {
+        const initial = agentToEdit ? { ...agentToEdit } : { ...emptyAgent };
+        return {
+            ...initial,
+            birthDate: isoToDisplay(initial.birthDate),
+            weddingDate: isoToDisplay(initial.weddingDate),
+            joinDate: isoToDisplay(initial.joinDate),
+        };
+    });
+
     const [photoPreview, setPhotoPreview] = useState<string | null>(agentToEdit?.photo || null);
     const [isFetchingCep, setIsFetchingCep] = useState(false);
     const [cepError, setCepError] = useState<string | null>(null);
@@ -181,6 +213,8 @@ const MemberForm: React.FC<MemberFormProps> = ({
                 formattedValue = formatPhone(value);
             } else if (name === 'cep') {
                 formattedValue = formatCEP(value);
+            } else if (name === 'birthDate' || name === 'weddingDate' || name === 'joinDate') {
+                formattedValue = formatDateMask(value);
             }
             setAgent(prev => ({ ...prev, [name]: formattedValue }));
         }
@@ -206,7 +240,15 @@ const MemberForm: React.FC<MemberFormProps> = ({
         setIsSaving(true);
         setSuccessMessage(null);
         
-        const success = await onSave(agent as Member).catch(err => {
+        // Converte as datas de volta para ISO antes de salvar
+        const agentToSave = {
+            ...agent,
+            birthDate: displayToIso(agent.birthDate),
+            weddingDate: displayToIso(agent.weddingDate),
+            joinDate: displayToIso(agent.joinDate),
+        } as Member;
+
+        const success = await onSave(agentToSave).catch(err => {
             console.error("Erro silencioso ao salvar:", err);
             return false;
         });
@@ -319,11 +361,12 @@ const MemberForm: React.FC<MemberFormProps> = ({
             }
             
             drawFieldInline('Nome Completo:', agent.fullName);
-            if (agent.birthDate) drawFieldInline('Nascimento:', new Date(agent.birthDate + 'T00:00:00').toLocaleDateString('pt-BR'));
+            // As datas no estado estão em formato DD/MM/AAAA por causa da edição manual, usar direto
+            drawFieldInline('Nascimento:', agent.birthDate);
             drawFieldInline('Estado Civil:', agent.maritalStatus);
             if (agent.maritalStatus === MaritalStatus.CASADO) {
                 drawFieldInline('Cônjuge:', agent.spouseName);
-                if (agent.weddingDate) drawFieldInline('Casamento:', new Date(agent.weddingDate + 'T00:00:00').toLocaleDateString('pt-BR'));
+                drawFieldInline('Casamento:', agent.weddingDate);
             }
     
             y = photoY + photoSize + 15;
@@ -383,7 +426,7 @@ const MemberForm: React.FC<MemberFormProps> = ({
             drawField('Comunidade:', agent.community);
             drawField('Setor Pastoral:', agent.sector);
             drawField('Função:', agent.role);
-            if (agent.joinDate) drawField('Data de Ingresso:', new Date(agent.joinDate + 'T00:00:00').toLocaleDateString('pt-BR'));
+            drawField('Data de Ingresso:', agent.joinDate);
             
             drawSection('Outras Informações');
             drawField('Possui Veículo:', agent.hasVehicle ? 'Sim' : 'Não');
@@ -434,11 +477,13 @@ const MemberForm: React.FC<MemberFormProps> = ({
                                 <InputField 
                                     name="birthDate" 
                                     label="Data de Nascimento (Titular)" 
-                                    type="date" 
+                                    type="tel" 
                                     value={agent.birthDate} 
                                     onChange={handleChange} 
                                     required 
                                     colSpan="sm:col-span-1"
+                                    maxLength={10}
+                                    placeholder="DD/MM/AAAA"
                                     tooltip="Sua data de nascimento será usada como parte da sua senha para acessar o sistema."
                                 />
                                 <InputField name="maritalStatus" label="Estado Civil" required colSpan="sm:col-span-2">
@@ -449,7 +494,16 @@ const MemberForm: React.FC<MemberFormProps> = ({
                                 {agent.maritalStatus === MaritalStatus.CASADO && (
                                     <>
                                         <InputField name="spouseName" label="Nome do Cônjuge" value={agent.spouseName} onChange={handleChange} colSpan="sm:col-span-1" />
-                                        <InputField name="weddingDate" label="Data de Casamento" type="date" value={agent.weddingDate} onChange={handleChange} colSpan="sm:col-span-1" />
+                                        <InputField 
+                                            name="weddingDate" 
+                                            label="Data de Casamento" 
+                                            type="tel" 
+                                            value={agent.weddingDate} 
+                                            onChange={handleChange} 
+                                            colSpan="sm:col-span-1" 
+                                            maxLength={10}
+                                            placeholder="DD/MM/AAAA"
+                                        />
                                     </>
                                 )}
                            </div>
@@ -515,7 +569,17 @@ const MemberForm: React.FC<MemberFormProps> = ({
                                 </select>
                             </InputField>
                         )}
-                        <InputField name="joinDate" label="Data de Ingresso" type="date" value={agent.joinDate} onChange={handleChange} required colSpan="sm:col-span-3" />
+                        <InputField 
+                            name="joinDate" 
+                            label="Data de Ingresso" 
+                            type="tel" 
+                            value={agent.joinDate} 
+                            onChange={handleChange} 
+                            required 
+                            colSpan="sm:col-span-3"
+                            maxLength={10}
+                            placeholder="DD/MM/AAAA"
+                        />
                     </FormSection>
                     
                     <FormSection title="Outras Informações">

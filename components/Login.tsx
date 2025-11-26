@@ -27,10 +27,29 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, loading, errorLog, o
         }
     }, [isRegistering]);
 
+    const formatDateMask = (value: string) => {
+        const numbers = value.replace(/\D/g, '');
+        if (numbers.length <= 2) return numbers;
+        if (numbers.length <= 4) return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+        return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+    };
+
+    const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setBirthDate(formatDateMask(e.target.value));
+    };
+
     const handleLoginSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (loading) return;
-        onLogin(login, birthDate);
+        
+        // Converter DD/MM/AAAA para ISO YYYY-MM-DD
+        let formattedDate = birthDate;
+        if (birthDate.length === 10) {
+            const [day, month, year] = birthDate.split('/');
+            formattedDate = `${year}-${month}-${day}`;
+        }
+        
+        onLogin(login, formattedDate);
     };
 
     const handleShowLogDownload = () => {
@@ -80,9 +99,15 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, loading, errorLog, o
                              <div>
                                 <label htmlFor="birthDate" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 ml-1">Data de Nascimento</label>
                                 <input
-                                    id="birthDate" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required
+                                    id="birthDate" 
+                                    type="tel" 
+                                    value={birthDate} 
+                                    onChange={handleBirthDateChange} 
+                                    required
                                     disabled={loading}
-                                    className="mt-1 block w-full px-4 py-3 border border-white/50 dark:border-slate-600/50 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-sm disabled:bg-slate-100/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 backdrop-blur-sm transition-all"
+                                    maxLength={10}
+                                    placeholder="DD/MM/AAAA"
+                                    className="mt-1 block w-full px-4 py-3 border border-white/50 dark:border-slate-600/50 rounded-xl shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 text-sm disabled:bg-slate-100/50 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 backdrop-blur-sm transition-all"
                                 />
                             </div>
                            
