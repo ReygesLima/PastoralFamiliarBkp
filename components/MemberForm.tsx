@@ -215,6 +215,9 @@ const MemberForm: React.FC<MemberFormProps> = ({
                 formattedValue = formatCEP(value);
             } else if (name === 'birthDate' || name === 'weddingDate' || name === 'joinDate') {
                 formattedValue = formatDateMask(value);
+            } else if (name === 'login') {
+                // FORCE UPPERCASE FOR LOGIN
+                formattedValue = value.toUpperCase();
             }
             setAgent(prev => ({ ...prev, [name]: formattedValue }));
         }

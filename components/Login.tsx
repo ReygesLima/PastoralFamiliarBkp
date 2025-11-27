@@ -48,6 +48,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, loading, errorLog, o
     const handleLoginSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (loading) return;
+
+        if (birthDate.length !== 10) {
+            addNotification({ message: 'Por favor, informe a data de nascimento completa (DD/MM/AAAA).', type: 'error' });
+            return;
+        }
         
         // Converter DD/MM/AAAA para ISO YYYY-MM-DD
         let formattedDate = birthDate;

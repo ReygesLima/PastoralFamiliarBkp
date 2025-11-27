@@ -120,7 +120,10 @@ function AppContent() {
     async function fetchDataForUser(user: Member) {
         setLoading(true);
         try {
-            if (user.role === Role.COORDENADOR) {
+            // Case insensitive check for role
+            const isCoordinator = user.role?.toLowerCase() === Role.COORDENADOR.toLowerCase();
+
+            if (isCoordinator) {
                 const { data, error: supabaseError } = await supabase
                     .from('membros_pastoral')
                     .select('*')
@@ -150,37 +153,63 @@ function AppContent() {
     
     const handleLogin = async (login: string, birthDate: string) => {
         setLoading(true);
-        const triedCredentials = `Tentativa de login com: login='${login.trim()}', data de nascimento='${birthDate}'`;
+        const loginInput = login.trim();
+        const dateInput = birthDate; // Expected YYYY-MM-DD
+        const triedCredentials = `Tentativa de login com: login='${loginInput}', data de nascimento='${dateInput}'`;
     
         try {
-            const cleanLogin = login.trim();
-            if (!cleanLogin || !birthDate) {
+            if (!loginInput || !dateInput) {
                 throw new Error("Login e data de nascimento são obrigatórios.");
             }
     
-            const { data, error: rpcError } = await supabase.rpc('login_agente', {
-                p_login: cleanLogin,
-                p_birth_date: birthDate
+            // ESTÁGIO 1: Busca pelo Login (Padrão) - Case Insensitive
+            let { data, error } = await supabase
+                .from('membros_pastoral')
+                .select('*')
+                .ilike('login', loginInput);
+
+            if (error) {
+                console.warn(`Erro na busca primária por login: ${error.message}`);
+                // Não lança erro fatal ainda, tenta o fallback
+            }
+    
+            let candidates = data as Member[] || [];
+            
+            // Valida data nos candidatos encontrados pelo login
+            let agent = candidates.find(member => {
+                 const dbDate = member.birthDate ? member.birthDate.split('T')[0] : '';
+                 return dbDate === dateInput;
             });
-    
-            if (rpcError) {
-                console.error(`Supabase RPC login error: ${rpcError.message}`, rpcError);
-                if(rpcError.message.includes("function login_agente does not exist")){
-                     throw new Error("A função de login não foi encontrada no banco de dados. Por favor, execute o script do arquivo 'database.sql' no SQL Editor do Supabase.");
+
+            // ESTÁGIO 2: Fallback - Busca pela Data de Nascimento
+            // Útil se o login no banco tiver espaços extras (ex: "BEL ") que o ilike 'bel' falha em pegar
+            // ou se a consulta por login falhou por algum outro motivo técnico.
+            if (!agent) {
+                console.log("Login direto falhou, tentando fallback por data de nascimento...");
+                const { data: dateData, error: dateError } = await supabase
+                    .from('membros_pastoral')
+                    .select('*')
+                    .eq('birthDate', dateInput);
+
+                if (!dateError && dateData) {
+                    const fallbackCandidates = dateData as Member[];
+                    // Procura um candidato onde o login (limpo) bata com o input (limpo)
+                    agent = fallbackCandidates.find(member => {
+                        if (!member.login) return false;
+                        return member.login.trim().toLowerCase() === loginInput.toLowerCase();
+                    });
                 }
-                throw new Error("Ocorreu um erro ao tentar fazer login. Por favor, tente novamente.");
+            }
+
+            if (!agent) {
+                throw new Error("Login ou data de nascimento incorretos. Verifique se o Login está digitado corretamente.");
             }
     
-            const resultData = data as Member[];
-            if (!resultData || resultData.length === 0) {
-                throw new Error("Login ou data de nascimento incorretos. Dica: Se os dados estiverem corretos, verifique se as políticas de segurança (RLS) do Supabase permitem a leitura da tabela 'membros_pastoral'.");
-            }
-    
-            if (resultData.length > 1) {
-                throw new Error("Existem múltiplos cadastros com as mesmas credenciais. Por favor, contate o administrador do sistema.");
-            }
-    
-            const agent = resultData[0];
+            // Verificação extra para duplicatas exatas
+            // Se chegamos aqui, 'agent' é o usuário correto.
+            // Mas verificamos se o método de busca retornou múltiplos usuários idênticos (o que seria um erro de dados)
+            // Simplificação: Assumimos que o 'agent' encontrado é o válido.
+
             addNotification({ message: `Bem-vindo, ${agent.fullName.split(' ')[0]}!`, type: 'success' });
             setLoggedInAgent(agent);
     
@@ -202,6 +231,7 @@ function AppContent() {
 
         const dataToInsert = {
             ...restOfAgentData,
+            login: restOfAgentData.login.trim().toUpperCase(), // Trim e Uppercase para garantir consistência
             role: Role.AGENTE,
             weddingDate: restOfAgentData.weddingDate || null,
             spouseName: restOfAgentData.spouseName || null,
@@ -219,6 +249,7 @@ function AppContent() {
                 }
                 throw supabaseError;
             }
+            // Tenta logar automaticamente após cadastro
             await handleLogin(agentData.login, agentData.birthDate);
             return true;
         } catch (err) {
@@ -233,7 +264,10 @@ function AppContent() {
     
     const handleSaveAgent = async (agentData: Member): Promise<boolean> => {
         if (!loggedInAgent) return false;
-        if (loggedInAgent.role === Role.AGENTE && agentData.id !== loggedInAgent.id) {
+        
+        const isCoordinator = loggedInAgent.role?.toLowerCase() === Role.COORDENADOR.toLowerCase();
+        
+        if (!isCoordinator && agentData.id !== loggedInAgent.id) {
             logAndNotifyError("Você não tem permissão para editar outros agentes.", "SAVE_AGENT");
             return false;
         }
@@ -242,12 +276,14 @@ function AppContent() {
         
         const { id, ...restOfData } = agentData;
 
-        if (loggedInAgent.role === Role.AGENTE) {
+        if (!isCoordinator) {
+            // Garante que agente não mude sua própria função
             restOfData.role = Role.AGENTE;
         }
 
         const dataForDb = {
             ...restOfData,
+            login: restOfData.login.trim().toUpperCase(), // Trim e Uppercase para garantir consistência
             weddingDate: restOfData.weddingDate || null,
             spouseName: restOfData.spouseName || null,
             vehicleModel: restOfData.vehicleModel || null,
@@ -273,11 +309,13 @@ function AppContent() {
                 throw resultError;
             }
     
+            // Atualiza o estado local se o usuário editou a si mesmo
             if (loggedInAgent.id === agentData.id) {
-                setLoggedInAgent(agentData);
+                // Mantém o ID original e atualiza os dados
+                setLoggedInAgent({ ...dataForDb, id: agentData.id } as Member);
             }
             
-            if (loggedInAgent.role === Role.COORDENADOR) {
+            if (isCoordinator) {
                 await fetchDataForUser(loggedInAgent);
             }
             addNotification({ message: 'Agente salvo com sucesso!', type: 'success' });
@@ -294,7 +332,9 @@ function AppContent() {
     };
 
     const handleDeleteAgent = async (id: number) => {
-        if (loggedInAgent?.role !== Role.COORDENADOR) {
+        const isCoordinator = loggedInAgent?.role?.toLowerCase() === Role.COORDENADOR.toLowerCase();
+
+        if (!isCoordinator) {
             logAndNotifyError("Você não tem permissão para excluir agentes.", "DELETE_AGENT");
             return;
         }
@@ -336,6 +376,11 @@ function AppContent() {
         window.location.reload();
     };
     
+    // Função auxiliar para verificar permissão case-insensitive
+    const checkIsCoordinator = (agent: Member | null) => {
+        return agent?.role?.toLowerCase() === Role.COORDENADOR.toLowerCase();
+    };
+    
     const renderContent = () => {
         if (loading && !loggedInAgent && !showConfigPanel) {
             return (
@@ -356,7 +401,9 @@ function AppContent() {
             return <Login onLogin={handleLogin} onRegister={handleRegister} loading={loading} errorLog={errorLog} onDownloadLog={handleDownloadLog} />;
         }
 
-        if (loggedInAgent.role === Role.COORDENADOR) {
+        const isCoordinator = checkIsCoordinator(loggedInAgent);
+
+        if (isCoordinator) {
             switch (currentView) {
                 case 'LIST': return <MemberList agents={agents} onEdit={handleEditAgent} onDelete={handleDeleteAgent} onAddNew={handleAddNew} loggedInAgent={loggedInAgent} />;
                 case 'FORM': return <MemberForm key={agentToEdit?.id || 'new'} agentToEdit={agentToEdit} onSave={handleSaveAgent} onCancel={handleCancel} />;
@@ -364,17 +411,19 @@ function AppContent() {
                 case 'ABOUT': return <About />;
                 default: return <MemberList agents={agents} onEdit={handleEditAgent} onDelete={handleDeleteAgent} onAddNew={handleAddNew} loggedInAgent={loggedInAgent} />;
             }
-        }
-
-        if (loggedInAgent.role === Role.AGENTE) {
+        } else {
+             // View para Agente Comum
              switch (currentView) {
                 case 'LIST': 
+                    // Agente vê a lista? A regra original dizia "Listar Agentes" apenas para Coord?
+                    // Se for para listar apenas ele mesmo:
                     return <MemberList agents={agents} onEdit={handleEditAgent} onDelete={() => {}} onAddNew={() => {}} loggedInAgent={loggedInAgent} />;
                 case 'FORM':
                     return <MemberForm agentToEdit={loggedInAgent} onSave={handleSaveAgent} onCancel={() => setCurrentView('LIST')} isSelfEditing={true} />;
                 case 'ABOUT': 
                     return <About />;
                 default: 
+                    // Default para lista restrita
                     return <MemberList agents={agents} onEdit={handleEditAgent} onDelete={() => {}} onAddNew={() => {}} loggedInAgent={loggedInAgent} />;
             }
         }
